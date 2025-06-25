@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Coaching Call Timers</title>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 5px; /* Adjusted margin */
+    }
+    h1 .pink-brain {
+        color: #ff69b4;
+    }
+    /* New styles for the added text under the title */
+    .subtitle {
+        font-size: 1.1em;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        color: #ccc;
+    }
+    .author-date { /* New style for the author/date line */
+        font-size: 0.9em;
+        color: #999;
+        margin-top: -5px; /* Pull it closer to the subtitles */
+        margin-bottom: 15px; /* Space before the question section */
+    }
+
+
+    /* Question Section */
+    .question {
+      margin-top: 10px;
+      font-style: italic;
+      color: #ff0;
+      width: 90%;
+      max-width: 800px;
+      text-align: left;
+      padding: 25px;
+      background: #222;
+      border-radius: 15px;
+      border: 2px solid #444;
+      margin-bottom: 30px;
+    }
+    .question label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    .question input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 1.1em;
+      border: 1px solid #555;
+      border-radius: 8px;
+      background-color: #333;
+      color: #fff;
+      margin-bottom: 15px;
+      box-sizing: border-box;
+    }
+    /* Style for placeholder text in input fields */
+    .question input[type="text"]::placeholder {
+      color: #aaa; /* Lighter color for better visibility */
+      opacity: 1; /* Firefox default opacity can make it fainter */
+    }
+
+    /* Styling for the displayed answers within the right panel */
+    .displayed-answers-container {
+        margin-top: 10px;
+        margin-bottom: 15px;
+        text-align: left; /* Align text within this container */
+    }
+    .answer-display-rp {
+      background-color: #333; /* Darker background for distinction */
+      color: #FFCC00; /* Brighter yellow/gold for better contrast */
+      padding: 5px 8px; /* Adjusted padding for smaller space */
+      border-radius: 5px;
+      margin-top: 5px; /* Space between displayed answers */
+      min-height: 18px; /* Slightly smaller min-height */
+      font-size: 0.9em; /* Smaller font size for display */
+      word-wrap: break-word; /* Ensure long text wraps */
+      text-align: center; /* Center the text within each display box */
+    }
+    .virtues-display-rp, .focus-display-rp { /* Added .focus-display-rp here */
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px; /* Space between items */
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+    .virtues-display-rp .answer-display-rp, .focus-display-rp .answer-display-rp {
+        flex: 1;
+        min-width: unset; /* Allow flexibility */
+        text-align: center;
+    }
+
+
+    /* Right Panel (Clock, Main Timer, Start All Timers, and Call Duration Switch) */
+    .right-panel {
+      position: fixed;
+      top: 100px;
+      right: 30px;
+      width: 200px;
+      padding: 15px;
+      background: #222;
+      border-radius: 15px;
+      border: 2px solid #444;
+      text-align: center;
+      z-index: 10;
+      box-sizing: border-box;
+    }
+
+    /* Adjusted clock font size to be 2x bigger */
+    #clock {
+      font-size: 1.8em; /* Base font size for the clock container */
+      margin-bottom: 10px;
+      color: #eee; /* Changed to a lighter grey for better contrast */
+    }
+    #clock .time-part { /* Style for the time part */
+        font-size: 1em; /* 100% of parent's font-size (1.8em) */
+        /* Removed display: block; so it stays inline */
+    }
+    #clock .date-part { /* Style for the date part */
+        font-size: 0.8em; /* 80% of parent's font-size (1.8em) */
+        display: block; /* Make it a block-level element for new line */
+    }
+
+    /* Adjusted main timer font size to be 70% of previous */
+    #main-timer {
+      font-size: 2.8em; /* 4em * 0.7 = 2.8em */
+      margin-bottom: 15px;
+    }
+
+    /* Call Duration Switch Styling (made buttons roughly half the size) */
+    .call-duration-switch {
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: center;
+        gap: 5px; /* Reduced gap */
+        background-color: #333;
+        padding: 5px;
+        border-radius: 8px;
+        border: 1px solid #444;
+    }
+    .call-duration-switch label {
+        cursor: pointer;
+        padding: 4px 8px; /* Roughly half padding */
+        border-radius: 6px;
+        background-color: transparent;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        font-weight: bold;
+        font-size: 0.9em; /* Adjusted font size */
+        flex: 1; /* Make them take equal width */
+        text-align: center;
+    }
+    .call-duration-switch input[type="radio"] {
+        display: none; /* Hide default radio button */
+    }
+    .call-duration-switch input[type="radio"]:checked + label {
+        background-color: #007bff;
+        color: white;
+    }
+
+    /* Timers section (the actual blocks) */
+    #timers {
+      width: 90%;
+      max-width: 800px;
+      padding-right: 230px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Timer Blocks */
+    .timer-block {
+      background: #222;
+      transition: box-shadow 0.3s ease, background-color 0.3s ease;
+      margin: 15px auto;
+      padding: 20px;
+      width: 100%;
+      border-radius: 15px;
+      border: 2px solid #444;
+      text-align: left;
+    }
+    .timer-block.active {
+      background-color: #1a3c66;
+      box-shadow: 0 0 25px 8px #00f;
+      border-color: #00f;
+    }
+
+    .label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .label span:last-child {
+      font-size: 0.8em;
+      color: #eee; /* Changed to a lighter grey for better contrast */
+      font-weight: normal;
+    }
+
+    .time {
+      font-size: 3em;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .celebrate {
+      font-size: 2.2em;
+      margin-top: 15px;
+      display: none;
+      color: #ff0;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .segment-nav {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    button {
+      font-size: 1.1em;
+      padding: 10px 20px;
+      margin: 0 8px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Group for "Start All Timers" and "New Call" buttons */
+    .main-action-buttons {
+        display: flex;
+        gap: 5px; /* Space between the buttons */
+        margin-top: 15px; /* Space above this button group */
+    }
+    .main-action-buttons button {
+        flex: 1; /* Make buttons take equal width */
+        font-size: 0.9em; /* Smaller font to match 30/45 min buttons */
+        padding: 4px 8px; /* Smaller padding to match 30/45 min buttons */
+        margin: 0; /* Remove individual button margins */
+    }
+    button#newCallButton {
+        background-color: #dc3545; /* Red color for New Call */
+    }
+    button#newCallButton:hover {
+        background-color: #c82333; /* Darker red on hover */
+    }
+
+
+    .checklist {
+      text-align: left;
+      margin-top: 15px;
+    }
+    .checklist label {
+      margin: 8px 0;
+      font-size: 1.1em;
+      display: flex;
+      align-items: flex-start;
+    }
+    .checklist input[type="checkbox"] {
+      margin-right: 10px;
+      transform: scale(1.2);
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .indent {
+      padding-left: 30px;
+    }
+
+    /* Media queries for responsiveness */
+    @media (max-width: 767px) {
+        .right-panel {
+            position: static;
+            width: 90%;
+            max-width: 400px;
+            margin: 20px auto;
+            right: auto;
+            top: auto;
+            padding-right: 0;
+        }
+        #timers {
+            padding-right: 0;
+            width: 90%;
+            max-width: 700px;
+        }
+        .question input[type="text"] {
+            width: 100%;
+        }
+        .virtues-inputs, .focus-inputs { /* Added .focus-inputs */
+            flex-direction: column;
+        }
+        .virtues-inputs input, .focus-inputs input { /* Added .focus-inputs input */
+            width: 100%;
+            min-width: unset;
+        }
+        .main-action-buttons {
+            flex-direction: column; /* Stack buttons on very small screens if they don't fit side by side */
+            gap: 10px;
+        }
+    }
+  </style>
+</head>
+<body>
+  <h1><span class="pink-brain">🧠</span> Coaching Call Cadence Timer</h1>
+  <p class="subtitle">10 Easy Pieces</p>
+  <p class="subtitle">7 Master Steps</p>
+  <p class="author-date">by Gabriel 6-24-25</p> <!-- Added author and date -->
+
+  <div class="question">
+    <label for="primaryQuestion">🧠 Type in your Primary Question for this call:</label>
+    <input type="text" id="primaryQuestion" placeholder="E.g., How can I improve my team's efficiency?" oninput="displayAnswer('primaryQuestion', 'displayPrimaryQuestionRp')">
+
+    <label>💎 Your Top Virtue for this call:</label> <!-- Updated label -->
+    <div class="virtues-inputs">
+      <input type="text" id="virtue1" placeholder="Virtue" oninput="displayVirtues()"> <!-- Only one input -->
+    </div>
+
+    <label>🎯 Focus • Language • Physiology:</label> <!-- No 'for' attribute as it's a group -->
+    <div class="focus-inputs"> <!-- New div for these 3 inputs -->
+      <input type="text" id="focusField1" placeholder="Focus" oninput="displayFocusLanguagePhysiology()">
+      <input type="text" id="focusField2" placeholder="Language" oninput="displayFocusLanguagePhysiology()">
+      <input type="text" id="focusField3" placeholder="Physiology" oninput="displayFocusLanguagePhysiology()">
+    </div>
+
+    <label for="archetypes">🧬 Archetypes to Embody:</label>
+    <input type="text" id="archetypes" placeholder="E.g., Leader, Mentor, Visionary" oninput="displayAnswer('archetypes', 'displayArchetypesRp')">
+  </div>
+
+  <div class="right-panel">
+    <!-- Call Duration Switch -->
+    <div class="call-duration-switch">
+      <input type="radio" id="call30min" name="callDuration" value="30" checked onchange="setCallDuration()">
+      <label for="call30min">30 min</label>
+      <input type="radio" id="call45min" name="callDuration" value="45" onchange="setCallDuration()">
+      <label for="call45min">45 min</label>
+    </div>
+
+    <div id="clock"></div>
+    <div id="main-timer">30:00</div>
+
+    <!-- New container for displayed answers in the right panel -->
+    <div class="displayed-answers-container">
+        <div class="answer-display-rp" id="displayPrimaryQuestionRp"></div>
+        <div class="virtues-display-rp">
+            <div class="answer-display-rp" id="displayVirtue1Rp"></div>
+        </div>
+        <div class="focus-display-rp"> <!-- New div for focus/language/physiology display -->
+            <div class="answer-display-rp" id="displayFocusField1Rp"></div>
+            <div class="answer-display-rp" id="displayFocusField2Rp"></div>
+            <div class="answer-display-rp" id="displayFocusField3Rp"></div>
+        </div>
+        <div class="answer-display-rp" id="displayArchetypesRp"></div>
+    </div>
+
+    <!-- Grouped Start All Timers and New Call buttons -->
+    <div class="main-action-buttons">
+        <button onclick="triggerSegment(0)">▶️ Start All Timers</button>
+        <button id="newCallButton" onclick="newCall()">🔄 New Call</button>
+    </div>
+  </div>
+
+  <div id="timers">
+    <div class="timer-block" id="segment-block-0">
+      <div class="label">
+        <span>🔥 Prime the Connection</span>
+        <span id="range-0">0–5 min</span>
+      </div>
+      <div class="checklist">
+        <label><input type="checkbox" /> 1. <b><i>CONNECT</i></b> and get rapport</label>
+        <label><input type="checkbox" /> 2. Get <b><i>FEEDBACK</i></b> on goals</label>
+        <label><input type="checkbox" /> 3. <b><i>CELEBRATE</i></b> wins and anchor successes</label>
+        <label><input type="checkbox" /> 4. Coach through assignment <b><i>CHALLENGES</i></b></label>
+      </div>
+      <div class="time" id="timer1">05:00</div>
+      <div class="segment-nav">
+        <!-- Removed the "Start" button from this segment -->
+        <button onclick="skipSegment(1)">⏭️ Skip</button>
+      </div>
+      <div class="celebrate" id="celebrate1">🎉🏆 Complete!</div>
+    </div>
+    <div class="timer-block" id="segment-block-1">
+      <div class="label">
+        <span>🎯 Get to the Truth & Create the Shift</span>
+        <span id="range-1">5–25 min</span>
+      </div>
+      <div class="checklist">
+        <label><input type="checkbox" /> 5. <b><i>CLARIFY</i></b> outcomes</label>
+        <label><input type="checkbox" /> 6. Use <b><i>PSYCHOLOGY</i></b> & Results coaching (Close the gap between where they are and where they want to be)</label>
+        <div class="indent">
+          <label><input type="checkbox" /> 6.1. <b><i>CONNECT</i></b> and appreciate their world</label>
+          <label><input type="checkbox" /> 6.2. <b><i>CONNECT</i></b> and get <b><i>LEVERAGE</i></b></label> <!-- Updated text -->
+          <label><input type="checkbox" /> 6.3. <b><i>INTERRUPT</i></b> and <b><i>ANNIHILATE</i></b> limiting patterns</label>
+          <label><input type="checkbox" /> 6.4. <b><i>DEFINE</i></b> the problem in solvable terms</label>
+          <label><input type="checkbox" /> 6.5. <b><i>ACCESS</i></b> empowering resources & <b><i>MAKE</i></b> the change</label>
+          <label><input type="checkbox" /> 6.6. <b><i>CONDITION</i></b> the change</label>
+          <label><input type="checkbox" /> 6.7. <b><i>TEST</i></b> and <b><i>LINK</i></b> to purpose/environment</label>
+        </div>
+      </div>
+      <div class="time" id="timer2">20:00</div>
+      <div class="segment-nav">
+        <button onclick="triggerSegment(0)">⬅️ Back</button>
+        <button onclick="skipSegment(2)">⏭️ Skip</button>
+      </div>
+      <div class="celebrate" id="celebrate2"> 🏆 Complete!</div>
+    </div>
+    <div class="timer-block" id="segment-block-2">
+      <div class="label">
+        <span>💡 Lock in Insight & Next Steps</span>
+        <span id="range-2">25–28.5 min</span>
+      </div>
+      <div class="checklist">
+        <label><input type="checkbox" /> 7. <b><i>FUTURE PACE</i></b> and <b><i>CONDITION CLIENT</i></b></label>
+        <label><input type="checkbox" /> 8. <b><i>GIVE ASSIGNMENTS</i></b> and <b><i>ESTABLISH OUTCOMES</i></b></label>
+        <label><input type="checkbox" /> 9. Have <b><i>CLIENT RECAP</i></b> their homework</label>
+        <label><input type="checkbox" /> 10. <b><i>ANCHOR</i></b> the value and <b><i>COMPLETE</i></b> in peak state</label>
+      </div>
+      <div class="time" id="timer3">03:30</div>
+      <div class="segment-nav">
+        <button onclick="triggerSegment(1)">⬅️ Back</button>
+        <button onclick="skipSegment(3)">⏭️ Skip</button>
+      </div>
+      <div class="celebrate" id="celebrate3">🎉🏆 Complete!</div>
+    </div>
+    <div class="timer-block" id="segment-block-3">
+      <div class="label">
+        <span>📝 Close, Capture notes, enter session</span>
+        <span id="range-3">28.5–30 min</span>
+      </div>
+      <div class="time" id="timer4">01:30</div>
+      <div class="segment-nav">
+        <button onclick="triggerSegment(2)">⬅️ Back</button>
+      </div>
+      <div class="celebrate" id="celebrate4">🎉🏆 Call Complete!</div>
+    </div>
+  </div>
+  <audio id="beep">
+    <source src="beep.mp3" type="audio/mpeg">
+    <source src="beep.ogg" type="audio/ogg">
+    Audio not supported.
+  </audio>
+  <audio id="applause">
+    <source src="applause.mp3" type="audio/mpeg">
+    <source src="applause.ogg" type="audio/ogg">
+    Audio not supported.
+  </audio>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    // Define segment configurations for 30 min and 45 min calls
+    const segments30min = [
+      { id: 1, label: "🔥 Prime the Connection", time: 5 * 60, range: "0–5 min" },
+      { id: 2, label: "🎯 Get to the Truth & Create the Shift", time: 20 * 60, range: "5–25 min" },
+      { id: 3, label: "💡 Lock in Insight & Next Steps", time: (3 * 60) + 30, range: "25–28.5 min" }, // Added 30 seconds
+      { id: 4, label: "📝 Close, Capture notes, enter session", time: (2 * 60) - 30, range: "28.5–30 min" } // Removed 30 seconds
+    ];
+
+    const segments45min = [
+      { id: 1, label: "🔥 Prime the Connection", time: 5 * 60, range: "0–5 min" },
+      { id: 2, label: "🎯 Get to the Truth & Create the Shift", time: 35 * 60, range: "5–40 min" },
+      { id: 3, label: "💡 Lock in Insight & Next Steps", time: (3 * 60) + 30, range: "40–43.5 min" }, // Added 30 seconds
+      { id: 4, label: "📝 Close, Capture notes, enter session", time: (2 * 60) - 30, range: "43.5–45 min" }  // Removed 30 seconds
+    ];
+
+    let currentSegments = []; // Will hold either segments30min or segments45min
+    let intervalHandles = [];
+    let currentSegment = -1;
+    let totalCallDurationSeconds = 30 * 60; // Default to 30 minutes
+    let mainInterval;
+
+    // Function to set the active call duration and update timers
+    function setCallDuration() {
+        const selectedDuration = document.querySelector('input[name="callDuration"]:checked').value;
+        clearAllTimers(); // Clear any running timers
+
+        if (selectedDuration === '30') {
+            currentSegments = [...segments30min];
+            totalCallDurationSeconds = 30 * 60;
+        } else {
+            currentSegments = [...segments45min];
+            totalCallDurationSeconds = 45 * 60;
+        }
+
+        // Update the main timer display
+        const min = Math.floor(totalCallDurationSeconds / 60).toString().padStart(2, '0');
+        const sec = (totalCallDurationSeconds % 60).toString().padStart(2, '0');
+        document.getElementById('main-timer').textContent = `${min}:${sec}`;
+
+        // Reset individual segment timers and ranges in the UI
+        currentSegments.forEach((segment, index) => {
+            const display = document.getElementById(`timer${segment.id}`);
+            if (display) {
+                display.textContent = formatTime(segment.time);
+            }
+            const rangeDisplay = document.getElementById(`range-${index}`);
+            if (rangeDisplay) {
+                rangeDisplay.textContent = segment.range;
+            }
+        });
+    }
+
+    // Initialize call duration on page load
+    document.addEventListener('DOMContentLoaded', setCallDuration);
+
+    function updateClock() {
+      const now = new Date();
+      // Format time with timezone, and date separately
+      const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZoneName: 'short' });
+      const dateString = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+      // Update the clock element with spans for different styling
+      // Changed to use <br> tag for a new line within the innerHTML assignment
+      document.getElementById('clock').innerHTML = `<span class="time-part">${timeString}</span><br><span class="date-part">${dateString}</span>`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function updateMainTimer() {
+      const min = Math.floor(totalCallDurationSeconds / 60).toString().padStart(2, '0');
+      const sec = (totalCallDurationSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('main-timer').textContent = `${min}:${sec}`;
+      if (totalCallDurationSeconds > 0) totalCallDurationSeconds--;
+      else clearInterval(mainInterval);
+    }
+
+    function startSegment(index) {
+      clearAllTimers();
+      currentSegment = index;
+      // Start main timer only if it's not already running
+      if (mainInterval === undefined || mainInterval === null) {
+          mainInterval = setInterval(updateMainTimer, 1000);
+      }
+
+      const segment = currentSegments[index];
+      const display = document.getElementById(`timer${segment.id}`);
+      let remaining = segment.time;
+      display.textContent = formatTime(remaining);
+
+      const timerBlock = document.querySelectorAll('.timer-block')[index];
+      timerBlock.classList.add('active');
+
+      intervalHandles[index] = setInterval(() => {
+        remaining--;
+        display.textContent = formatTime(remaining);
+        if (remaining <= 0) {
+          clearInterval(intervalHandles[index]);
+          completeSegment(index);
+        }
+      }, 1000);
+    }
+
+    function completeSegment(index) {
+      const segment = currentSegments[index];
+      const display = document.getElementById(`timer${segment.id}`);
+      display.textContent = "00:00";
+      const celebrate = document.getElementById(`celebrate${segment.id}`);
+      const beep = document.getElementById("beep");
+      const applause = document.getElementById("applause");
+      celebrate.style.display = "block";
+      try {
+        beep.play().catch(e => console.warn("Beep audio failed to play:", e.message));
+        setTimeout(() => applause.play().catch(e => console.warn("Applause audio failed to play:", e.message)), 300);
+      } catch (e) {
+        console.warn("Audio playback error:", e.message);
+      }
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      if (index < currentSegments.length - 1) {
+        setTimeout(() => triggerSegment(index + 1), 2000);
+      } else {
+        // If all segments are complete, clear the main interval too
+        clearInterval(mainInterval);
+        mainInterval = null; // Reset main interval handle
+      }
+    }
+
+    function skipSegment(index) {
+      // Mark the current segment as complete, which will also trigger confetti
+      if (currentSegment >= 0 && currentSegment < currentSegments.length) {
+          completeSegment(currentSegment);
+      }
+
+      clearAllTimers(); // Clear all timers and active states (including the one just completed)
+      if (index < currentSegments.length) {
+        triggerSegment(index); // Start the new segment
+      } else {
+        // If skipping past the last segment, ensure main timer stops
+        clearInterval(mainInterval);
+        mainInterval = null;
+        document.getElementById('main-timer').textContent = "00:00"; // Set main timer to 00:00
+      }
+    }
+
+    function clearAllTimers() {
+      intervalHandles.forEach(clearInterval);
+      intervalHandles = [];
+      document.querySelectorAll('.celebrate').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.timer-block').forEach(block => block.classList.remove('active'));
+    }
+
+    function formatTime(seconds) {
+      let min = Math.floor(seconds / 60).toString().padStart(2, '0');
+      let sec = (seconds % 60).toString().padStart(2, '0');
+      return `${min}:${sec}`;
+    }
+
+    function triggerSegment(index) {
+      clearAllTimers();
+      document.querySelectorAll('.timer-block').forEach(block => block.classList.remove('active'));
+      startSegment(index);
+    }
+
+    // Function to display the typed answer in the right panel
+    function displayAnswer(inputId, displayId) {
+        const inputElement = document.getElementById(inputId);
+        const displayElement = document.getElementById(displayId);
+        displayElement.textContent = inputElement.value;
+    }
+
+    // Function to display the single virtue in the right panel
+    function displayVirtues() {
+        const virtue = document.getElementById('virtue1').value;
+        document.getElementById('displayVirtue1Rp').textContent = virtue;
+    }
+
+    // Function to display Focus, Language, Physiology in the right panel
+    function displayFocusLanguagePhysiology() {
+        const focus = document.getElementById('focusField1').value;
+        const language = document.getElementById('focusField2').value;
+        const physiology = document.getElementById('focusField3').value;
+
+        document.getElementById('displayFocusField1Rp').textContent = focus;
+        document.getElementById('displayFocusField2Rp').textContent = language;
+        document.getElementById('displayFocusField3Rp').textContent = physiology;
+    }
+
+    // Function to handle starting a new call (reset everything)
+    function newCall() {
+        clearAllTimers(); // Stop all timers and clear active states/celebrations
+        clearInterval(mainInterval); // Ensure the main interval is stopped
+        mainInterval = null; // Reset the main interval handle
+
+        // Reset the main timer display based on the currently selected duration
+        const selectedDuration = document.querySelector('input[name="callDuration"]:checked').value;
+        if (selectedDuration === '30') {
+            totalCallDurationSeconds = 30 * 60;
+        } else {
+            totalCallDurationSeconds = 45 * 60;
+        }
+        document.getElementById('main-timer').textContent = formatTime(totalCallDurationSeconds);
+
+        // Reset individual segment timers to their initial values
+        currentSegments.forEach((segment, index) => {
+            const display = document.getElementById(`timer${segment.id}`);
+            if (display) {
+                display.textContent = formatTime(segment.time);
+            }
+            // Ensure the ranges are also correctly set (they should be updated by setCallDuration)
+            const rangeDisplay = document.getElementById(`range-${index}`);
+            if (rangeDisplay) {
+                rangeDisplay.textContent = segment.range;
+            }
+        });
+
+        // The following lines are commented out to prevent clearing the input fields
+        // document.getElementById('primaryQuestion').value = '';
+        // document.getElementById('virtue1').value = '';
+        // document.getElementById('focusField1').value = '';
+        // document.getElementById('focusField2').value = '';
+        // document.getElementById('focusField3').value = '';
+        // document.getElementById('archetypes').value = '';
+
+        // The following lines are commented out to prevent clearing the displayed answers
+        // document.getElementById('displayPrimaryQuestionRp').textContent = '';
+        // document.getElementById('displayVirtue1Rp').textContent = '';
+        // document.getElementById('displayFocusField1Rp').textContent = '';
+        // document.getElementById('displayFocusField2Rp').textContent = '';
+        // document.getElementById('displayFocusField3Rp').textContent = '';
+        // document.getElementById('displayArchetypesRp').textContent = '';
+
+
+        // Uncheck all checklists
+        document.querySelectorAll('.checklist input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+
+        currentSegment = -1; // Reset current segment index
+    }
+  </script>
+</body>
+</html>
+ 
